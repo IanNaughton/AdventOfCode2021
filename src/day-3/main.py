@@ -45,10 +45,10 @@ def part_one():
 
     binary_gamma = ''.join(gamma_list)
     binary_epsilon = ''.join(epsilon_list)
+
     gamma = int(binary_gamma, 2)
     epsilon = int(binary_epsilon, 2)
-    print(f"Gamma: {gamma}")
-    print(f"Epsilon: {epsilon}")
+
     return gamma * epsilon
 
 
@@ -56,20 +56,34 @@ def part_one():
 # R E C U R S I V E  J O U R N E Y
 def part_two():
     binary_lines = read_inputs()
-    max_length = len(binary_lines[0]) - 1
+    recursion_limit = len(binary_lines[0]) - 1
+
     oxygen_binary_rating = find_rating(
-        get_oxygen_generator_bit_to_keep, 0, binary_lines, max_length)
+        get_oxygen_generator_bit_to_keep,
+        0,
+        binary_lines,
+        recursion_limit
+    )
     oxygen_rating = int(oxygen_binary_rating, 2)
     print(f"Oxygen Generator Rating: {oxygen_rating}")
+
     scrubber_binary_rating = find_rating(
-        get_scrubber_generator_bit_to_keep, 0, binary_lines, max_length)
+        get_scrubber_generator_bit_to_keep,
+        0,
+        binary_lines,
+        recursion_limit
+    )
     scrubber_rating = int(scrubber_binary_rating, 2)
     print(f"C02 Scrubber Rating: {scrubber_rating}")
+
     return oxygen_rating * scrubber_rating
 
 
 def get_oxygen_generator_bit_to_keep(zeroes, ones):
     bit_to_keep = ""
+
+    # Keep the greater of the
+    # two--ones win any ties
     if zeroes > ones:
         bit_to_keep = "0"
     else:
@@ -79,26 +93,30 @@ def get_oxygen_generator_bit_to_keep(zeroes, ones):
 
 def get_scrubber_generator_bit_to_keep(zeroes, ones):
     bit_to_keep = ""
+
+    # Keep the lesser of the
+    # two--zeroes win any ties
     if zeroes > ones:
         bit_to_keep = "1"
     else:
         bit_to_keep = "0"
-    #print(f"Zeroes: {zeroes}, Ones: {ones}, Bit to keep: {bit_to_keep}")
     return bit_to_keep
 
 
-def find_rating(find_bit_to_keep, column, binary_lines, max_length):
+def find_rating(find_bit_to_keep, column, binary_lines, recursion_limit):
     zeroes = 0
     ones = 0
     bit_to_keep = ""
+    number_of_remaining_rows = len(binary_lines)
 
+    # HACK:
     # Handle an edge case where we are down to the last
     # item in the list--we just want to take the value
-    # for that item as our bit to keep in that case.
-    if len(binary_lines) == 1:
+    # for that item as our bit to keep in that case
+    if number_of_remaining_rows == 1:
         bit_to_keep = binary_lines[0][column]
     else:
-        for row in range(0, len(binary_lines)):
+        for row in range(0, number_of_remaining_rows):
             if binary_lines[row][column] == "0":
                 zeroes += 1
             else:
@@ -107,19 +125,25 @@ def find_rating(find_bit_to_keep, column, binary_lines, max_length):
         bit_to_keep = find_bit_to_keep(zeroes, ones)
 
     updated_binary_lines = []
-    for row in range(0, len(binary_lines)):
+    for row in range(0, number_of_remaining_rows):
         if binary_lines[row][column] == bit_to_keep:
             updated_binary_lines.append(binary_lines[row])
 
-    if column == max_length:
+    # HACK:
+    # Handle edge case where we reach the last column
+    # and need to unwind the call stack
+    if column == recursion_limit:
         return bit_to_keep
     else:
         bits = find_rating(
             find_bit_to_keep,
             column + 1,
             updated_binary_lines,
-            max_length
+            recursion_limit
         )
+        # Append to the front of the list
+        # since we'll get the bits in reverse
+        # order as the call stack unwinds
         return bit_to_keep + bits
 
 
